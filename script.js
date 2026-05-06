@@ -5,6 +5,12 @@ if (localStorage.getItem('theme') === 'dark') {
   document.documentElement.classList.add('dark');
 }
 
+// Force hide auth modal immediately — never show on load
+document.addEventListener('DOMContentLoaded', function() {
+  var m = document.getElementById('authModal');
+  if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+});
+
 const API = '';
 let stories = [];
 let currentStoryId = null;
