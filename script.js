@@ -29,10 +29,14 @@ async function apiFetch(url, options = {}) {
 
 // ===== AUTH FUNCTIONS =====
 function showAuthModal() {
-  document.getElementById('authModal').classList.remove('hidden');
+  const m = document.getElementById('authModal');
+  m.classList.remove('hidden');
+  m.style.display = 'flex';
 }
 function hideAuthModal() {
-  document.getElementById('authModal').classList.add('hidden');
+  const m = document.getElementById('authModal');
+  m.classList.add('hidden');
+  m.style.display = 'none';
 }
 function switchAuthTab(tab) {
   document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
@@ -922,8 +926,7 @@ async function init() {
   }
   await restoreSession();
   renderHome();
-  // Always hide modal on load — only show when needed
-  hideAuthModal();
+  hideAuthModal(); // always hidden on load
 }
 
 init();

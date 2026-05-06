@@ -1264,7 +1264,11 @@ body.dark .story-card:hover {
   justify-content: center;
   padding: 1rem;
 }
-.auth-modal.hidden { display: none; }
+.auth-modal.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
 .auth-box {
   background: var(--card);
   border: 1px solid var(--border);
