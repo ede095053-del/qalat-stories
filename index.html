@@ -10,7 +10,7 @@
 <body>
 
   <!-- AUTH MODAL -->
-  <div id="authModal" class="auth-modal">
+  <div id="authModal" class="auth-modal hidden" onclick="if(event.target===this)hideAuthModal()">
     <div class="auth-box">
       <div class="auth-tabs">
         <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>

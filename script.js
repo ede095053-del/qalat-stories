@@ -218,10 +218,15 @@ function loadSampleStories() {
 
 // ===== PAGE NAVIGATION =====
 function showPage(name) {
+  // Require login for Write and Profile pages
+  if ((name === 'write' || name === 'profile') && !currentUser) {
+    showAuthModal();
+    showToast('Please login to access this page.');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   window.scrollTo(0, 0);
-  // Remove preview banner if navigating away from preview
   if (name !== 'read' && name !== 'chapter') {
     const banner = document.getElementById('previewBanner');
     if (banner) banner.remove();
@@ -910,10 +915,8 @@ async function init() {
   }
   await restoreSession();
   renderHome();
-  // Hide auth modal if already logged in, show if not
-  if (currentUser) {
-    hideAuthModal();
-  }
+  // Always hide modal on load — only show when needed
+  hideAuthModal();
 }
 
 init();
