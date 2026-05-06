@@ -253,6 +253,18 @@ function openStory(id) {
     chList.appendChild(item);
   });
 
+  // Show Add Chapter button only if this is the author's story
+  const addBtn = document.getElementById('addChapterBtn');
+  const addForm = document.getElementById('addChapterForm');
+  if (myStoryIds.includes(s.id)) {
+    addBtn.style.display = 'inline-flex';
+  } else {
+    addBtn.style.display = 'none';
+  }
+  addForm.style.display = 'none';
+  document.getElementById('newChTitle').value = '';
+  document.getElementById('newChContent').value = '';
+
   showPage('read');
 }
 
@@ -526,6 +538,70 @@ function showToast(msg) {
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2500);
 }
 
+
+// ===== ADD CHAPTER =====
+let newChapterImageDatas = [];
+
+function showAddChapter() {
+  document.getElementById('addChapterForm').style.display = 'block';
+  document.getElementById('addChapterBtn').style.display = 'none';
+  document.getElementById('addChapterForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelAddChapter() {
+  document.getElementById('addChapterForm').style.display = 'none';
+  document.getElementById('addChapterBtn').style.display = 'inline-flex';
+  document.getElementById('newChTitle').value = '';
+  document.getElementById('newChContent').value = '';
+  document.getElementById('newChImgPreviews').innerHTML = '';
+  newChapterImageDatas = [];
+}
+
+function previewNewChImages(event) {
+  const files = Array.from(event.target.files);
+  const container = document.getElementById('newChImgPreviews');
+  newChapterImageDatas = [];
+  container.innerHTML = '';
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      newChapterImageDatas.push(e.target.result);
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveNewChapter() {
+  const title = document.getElementById('newChTitle').value.trim();
+  const content = document.getElementById('newChContent').value.trim();
+  if (!title) { showToast('Please enter a chapter title.'); return; }
+  if (!content) { showToast('Please write some content.'); return; }
+
+  const s = stories.find(x => x.id === currentStoryId);
+  if (!s) return;
+
+  s.chapters.push({ title, content, images: [...newChapterImageDatas] });
+
+  // Update chapter count display
+  document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
+
+  // Rebuild chapter list
+  const chList = document.getElementById('chapterList');
+  chList.innerHTML = '<h3>Chapters</h3>';
+  s.chapters.forEach((ch, i) => {
+    const item = document.createElement('div');
+    item.className = 'chapter-item';
+    item.innerHTML = `<span>${ch.title}</span><small>Chapter ${i + 1}</small>`;
+    item.onclick = () => openChapter(i);
+    chList.appendChild(item);
+  });
+
+  cancelAddChapter();
+  showToast('🎉 Chapter ' + s.chapters.length + ' published!');
+}
 
 // ===== LANGUAGE SWITCHER =====
 const translations = {

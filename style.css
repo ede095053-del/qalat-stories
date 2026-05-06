@@ -963,6 +963,74 @@ body.dark .story-card:hover {
   margin-top: 1rem;
 }
 
+/* Add chapter form */
+.btn-add-chapter {
+  background: linear-gradient(135deg, var(--orange), var(--purple));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.65rem 1.6rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 20px rgba(234,88,12,0.3);
+  margin-top: 0.5rem;
+}
+.btn-add-chapter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(234,88,12,0.45);
+  filter: brightness(1.08);
+}
+
+.add-chapter-form {
+  margin-top: 2rem;
+  background: var(--card);
+  border: 2px solid var(--orange);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(234,88,12,0.15);
+}
+.add-chapter-form h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--orange), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.add-chapter-form .form-group input,
+.add-chapter-form .form-group textarea {
+  width: 100%;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.7rem 1rem;
+  outline: none;
+  transition: var(--transition);
+  resize: vertical;
+}
+.add-chapter-form .form-group input:focus,
+.add-chapter-form .form-group textarea:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(234,88,12,0.15);
+}
+.add-chapter-form .form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.add-chapter-form .form-group { margin-bottom: 1.2rem; }
+
 /* ===== PROFILE PAGE ===== */
 .profile-container {
   max-width: 900px;

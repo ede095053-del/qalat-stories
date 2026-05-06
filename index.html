@@ -106,9 +106,35 @@
           <p id="readDesc"></p>
           <button class="btn-primary" onclick="startReading()">Read Now</button>
           <button class="btn-outline" onclick="likeStory()">❤️ Like</button>
+          <button class="btn-add-chapter" id="addChapterBtn" onclick="showAddChapter()" style="display:none;">✏️ Add Chapter</button>
         </div>
       </div>
       <div class="chapter-list" id="chapterList"></div>
+
+      <!-- ADD CHAPTER FORM (hidden by default) -->
+      <div id="addChapterForm" class="add-chapter-form" style="display:none;">
+        <h3>✏️ Add New Chapter</h3>
+        <div class="form-group">
+          <label>Chapter Title</label>
+          <input type="text" id="newChTitle" placeholder="e.g. Chapter 2: The Journey...">
+        </div>
+        <div class="form-group">
+          <label>Content</label>
+          <textarea id="newChContent" class="big-textarea" placeholder="Write your chapter here..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Images (optional)</label>
+          <div class="chapter-img-upload" onclick="document.getElementById('newChImgs').click()">
+            📸 Click to add images
+            <input type="file" id="newChImgs" accept="image/*" multiple style="display:none;" onchange="previewNewChImages(event)">
+          </div>
+          <div id="newChImgPreviews" class="img-previews"></div>
+        </div>
+        <div class="form-btns">
+          <button class="btn-outline" onclick="cancelAddChapter()">Cancel</button>
+          <button class="btn-primary" onclick="saveNewChapter()">📤 Publish Chapter</button>
+        </div>
+      </div>
     </div>
   </div>
 
