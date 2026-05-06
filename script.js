@@ -304,6 +304,7 @@ function likeStory() {
   if (!s) return;
   s.likes++;
   document.getElementById('readLikes').textContent = '❤️ ' + fmtNum(s.likes);
+  saveToStorage();
   showToast('❤️ Liked!');
 }
 
@@ -328,6 +329,7 @@ function addComment() {
   const s = stories.find(x => x.id === currentStoryId);
   if (!s) return;
   s.comments.push({ name, text });
+  saveToStorage();
   document.getElementById('commentName').value = '';
   document.getElementById('commentText').value = '';
   renderComments(s, currentChapterIndex);
@@ -481,6 +483,7 @@ function submitStory(e) {
 
   stories.unshift(newStory);
   myStoryIds.push(newStory.id);
+  saveToStorage();
 
   // reset
   document.getElementById('storyForm').reset();
@@ -584,6 +587,7 @@ function saveNewChapter() {
   if (!s) return;
 
   s.chapters.push({ title, content, images: [...newChapterImageDatas] });
+  saveToStorage();
 
   // Update chapter count display
   document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
@@ -727,8 +731,37 @@ function toggleDark() {
     });
   }
 })();
+// ===== PERSIST TO LOCALSTORAGE =====
+function saveToStorage() {
+  try {
+    // Save only user-written stories (not sample ones with numeric ids 1-4)
+    const userStories = stories.filter(s => typeof s.id === 'number' && s.id > 4 || typeof s.id === 'string' && s.id !== '__preview__');
+    localStorage.setItem('qalat_stories', JSON.stringify(userStories));
+    localStorage.setItem('qalat_myIds', JSON.stringify(myStoryIds));
+  } catch(e) {
+    // localStorage might be full (large images) — warn user
+    showToast('⚠️ Could not save: try using smaller images.');
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('qalat_stories');
+    const savedIds = localStorage.getItem('qalat_myIds');
+    if (saved) {
+      const userStories = JSON.parse(saved);
+      // Merge: put user stories at the front, keep sample stories at back
+      stories = [...userStories, ...stories];
+    }
+    if (savedIds) {
+      myStoryIds = JSON.parse(savedIds);
+    }
+  } catch(e) { /* ignore parse errors */ }
+}
+
 // ===== INIT =====
 loadSampleStories();
+loadFromStorage();
 renderHome();
 
 // Restore saved language
