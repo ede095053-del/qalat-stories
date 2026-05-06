@@ -804,6 +804,51 @@ body.dark .story-card:hover {
 .form-group textarea { min-height: 100px; }
 .big-textarea { min-height: 220px !important; }
 
+/* Language checkboxes */
+.lang-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+.lang-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: var(--transition);
+  user-select: none;
+}
+.lang-check:hover {
+  border-color: var(--green);
+  background: rgba(7,137,48,0.08);
+  color: var(--green);
+}
+.lang-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  min-height: unset;
+  box-shadow: none;
+}
+.lang-check:has(input:checked) {
+  background: linear-gradient(135deg, rgba(7,137,48,0.15), rgba(8,145,178,0.15));
+  border-color: var(--green);
+  color: var(--green);
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

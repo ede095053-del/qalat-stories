@@ -210,7 +210,7 @@ function filterStories() {
 
   let list = [...stories];
   if (genre !== 'all') list = list.filter(s => s.genre === genre);
-  if (lang !== 'all') list = list.filter(s => s.language === lang);
+  if (lang !== 'all') list = list.filter(s => s.language && s.language.includes(lang));
   if (sort === 'new') list.sort((a, b) => b.createdAt - a.createdAt);
   else if (sort === 'reads') list.sort((a, b) => b.reads - a.reads);
   else list.sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
@@ -368,12 +368,18 @@ function changeProfilePhoto(event) {
 }
 
 // ===== WRITE / SUBMIT STORY =====
+function getSelectedLangs() {
+  const checked = document.querySelectorAll('#storyLangGroup input:checked');
+  const langs = Array.from(checked).map(c => c.value);
+  return langs.length ? langs.join(', ') : 'Amharic';
+}
+
 function previewStory() {
   const title = document.getElementById('storyTitle').value.trim() || 'Untitled Story';
   const author = document.getElementById('authorName').value.trim() || 'Anonymous';
   const desc = document.getElementById('storyDesc').value.trim() || 'No description.';
   const genre = document.getElementById('storyGenre').value;
-  const lang = document.getElementById('storyLang').value;
+  const lang = getSelectedLangs();
   const emoji = document.getElementById('coverEmoji').value || '📖';
   const color = document.getElementById('coverColor').value;
   const ch1Title = document.getElementById('ch1Title').value.trim() || 'Chapter 1';
@@ -438,7 +444,7 @@ function submitStory(e) {
   const author = document.getElementById('authorName').value.trim();
   const desc = document.getElementById('storyDesc').value.trim();
   const genre = document.getElementById('storyGenre').value;
-  const lang = document.getElementById('storyLang').value;
+  const lang = getSelectedLangs();
   const emoji = document.getElementById('coverEmoji').value || '📖';
   const color = document.getElementById('coverColor').value;
   const ch1Title = document.getElementById('ch1Title').value.trim();
