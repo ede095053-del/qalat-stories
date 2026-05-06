@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ቃላት - Ethiopian Story Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-logo" onclick="showPage('home')">📖 ቃላት</div>
+    <div class="nav-links">
+      <button onclick="showPage('home')">Home</button>
+      <button onclick="showPage('browse')">Browse</button>
+      <button onclick="showPage('write')">Write</button>
+      <button onclick="showPage('profile')" class="btn-primary">My Profile</button>
+    </div>
+    <div class="nav-search">
+      <input type="text" id="searchInput" placeholder="Search stories...">
+      <button onclick="searchStories()">🔍</button>
+    </div>
+  <button id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+  </nav>
+
+  <!-- PAGES -->
+  <div id="page-home" class="page active">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1><span class="title-eth">ቃላት</span><span class="title-en">Qalat</span></h1>
+        <p>Ethiopia's home for stories — read, write, and share in Amharic, Afaan Oromo, Tigrinya & more.</p>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="showPage('browse')">Start Reading</button>
+          <button class="btn-outline" onclick="showPage('write')">Start Writing</button>
+        </div>
+      </div>
+      <div class="hero-art">📚</div>
+    </section>
+
+    <!-- Genre Tags -->
+    <section class="section">
+      <h2><span class="h2-text">Browse by Genre</span></h2>
+      <div class="genre-tags" id="genreTags"></div>
+    </section>
+
+    <!-- Featured Stories -->
+    <section class="section">
+      <h2><span class="h2-text">🔥 Trending Stories</span></h2>
+      <div class="story-grid" id="trendingGrid"></div>
+    </section>
+
+    <!-- New Stories -->
+    <section class="section">
+      <h2><span class="h2-text">✨ New Arrivals</span></h2>
+      <div class="story-grid" id="newGrid"></div>
+    </section>
+  </div>
+
+  <!-- BROWSE PAGE -->
+  <div id="page-browse" class="page">
+    <div class="browse-header">
+      <h1>Browse Stories</h1>
+      <div class="filter-bar">
+        <select id="genreFilter" onchange="filterStories()">
+          <option value="all">All Genres</option>
+        </select>
+        <select id="langFilter" onchange="filterStories()">
+          <option value="all">All Languages</option>
+          <option value="Amharic">Amharic</option>
+          <option value="Afaan Oromo">Afaan Oromo</option>
+          <option value="Tigrinya">Tigrinya</option>
+          <option value="English">English</option>
+        </select>
+        <select id="sortFilter" onchange="filterStories()">
+          <option value="trending">Trending</option>
+          <option value="new">Newest</option>
+          <option value="reads">Most Read</option>
+        </select>
+      </div>
+    </div>
+    <div class="story-grid" id="browseGrid"></div>
+  </div>
+
+  <!-- READ PAGE -->
+  <div id="page-read" class="page">
+    <div class="reader-container">
+      <button class="back-btn" onclick="showPage('browse')">← Back</button>
+      <div class="story-header">
+        <div class="story-cover-large" id="readCover"></div>
+        <div class="story-meta">
+          <h1 id="readTitle"></h1>
+          <p class="author" id="readAuthor"></p>
+          <div class="tags" id="readTags"></div>
+          <div class="stats">
+            <span id="readViews">� 0</span>
+            <span id="readLikes">❤️ 0</span>
+            <span id="readChapters">📄 0 chapters</span>
+          </div>
+          <p id="readDesc"></p>
+          <button class="btn-primary" onclick="startReading()">Read Now</button>
+          <button class="btn-outline" onclick="likeStory()">❤️ Like</button>
+        </div>
+      </div>
+      <div class="chapter-list" id="chapterList"></div>
+    </div>
+  </div>
+
+  <!-- CHAPTER READ PAGE -->
+  <div id="page-chapter" class="page">
+    <div class="chapter-reader">
+      <div class="chapter-nav">
+        <button onclick="prevChapter()">← Prev</button>
+        <span id="chapterTitle"></span>
+        <button onclick="nextChapter()">Next →</button>
+      </div>
+      <div class="chapter-content" id="chapterContent"></div>
+      <div class="chapter-nav bottom">
+        <button onclick="prevChapter()">← Prev</button>
+        <button onclick="showPage('read')">📚 Story Page</button>
+        <button onclick="nextChapter()">Next →</button>
+      </div>
+      <!-- Comments -->
+      <div class="comments-section">
+        <h3>Comments</h3>
+        <div class="comment-form">
+          <input type="text" id="commentName" placeholder="Your name">
+          <textarea id="commentText" placeholder="Share your thoughts..."></textarea>
+          <button class="btn-primary" onclick="addComment()">Post Comment</button>
+        </div>
+        <div id="commentsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WRITE PAGE -->
+  <div id="page-write" class="page">
+    <div class="write-container">
+      <h1>✍️ Publish Your Story</h1>
+      <form id="storyForm" onsubmit="submitStory(event)">
+        <div class="form-group">
+          <label>Story Title</label>
+          <input type="text" id="storyTitle" placeholder="Enter your story title..." required>
+        </div>
+        <div class="form-group">
+          <label>Author Name</label>
+          <input type="text" id="authorName" placeholder="Your name or pen name..." required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="storyDesc" placeholder="What is your story about?" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Genre</label>
+            <select id="storyGenre" required>
+              <option value="">Select genre</option>
+              <option>Romance</option>
+              <option>Drama</option>
+              <option>Mystery</option>
+              <option>Fantasy</option>
+              <option>History</option>
+              <option>Comedy</option>
+              <option>Thriller</option>
+              <option>Poetry</option>
+              <option>Religion</option>
+              <option>Youth</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Language</label>
+            <select id="storyLang" required>
+              <option value="">Select language</option>
+              <option>Amharic</option>
+              <option>Afaan Oromo</option>
+              <option>Tigrinya</option>
+              <option>English</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cover Photo (optional)</label>
+          <div class="photo-upload-box" id="coverUploadBox" onclick="document.getElementById('coverPhotoInput').click()">
+            <span id="coverUploadLabel">📷 Click to upload cover photo</span>
+            <img id="coverPreview" src="" alt="" style="display:none;">
+            <input type="file" id="coverPhotoInput" accept="image/*" style="display:none;" onchange="previewCover(event)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Or use Emoji + Color instead</label>
+          <div class="cover-picker">
+            <input type="text" id="coverEmoji" placeholder="e.g. 🌹" maxlength="4">
+            <input type="color" id="coverColor" value="#c0392b">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Chapter 1 Title</label>
+          <input type="text" id="ch1Title" placeholder="Chapter title..." required>
+        </div>
+        <div class="form-group">
+          <label>Chapter 1 Content</label>
+          <textarea id="ch1Content" class="big-textarea" placeholder="Write your story here..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Chapter 1 Images (optional — add photos inside your chapter)</label>
+          <div class="chapter-img-upload" onclick="document.getElementById('chapterImgsInput').click()">
+            📸 Click to add images to chapter
+            <input type="file" id="chapterImgsInput" accept="image/*" multiple style="display:none;" onchange="previewChapterImages(event)">
+          </div>
+          <div id="chapterImgPreviews" class="img-previews"></div>
+        </div>
+        <button type="submit" class="btn-primary big-btn">📤 Publish Story</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div id="page-profile" class="page">
+    <div class="profile-container">
+      <div class="profile-header">
+        <div class="avatar" id="avatarDisplay" onclick="document.getElementById('profilePhotoInput').click()" title="Click to change photo" style="cursor:pointer;">
+          📖
+          <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;" onchange="changeProfilePhoto(event)">
+        </div>
+        <div>
+          <h2 id="profileName">Guest Reader</h2>
+          <p>Member of ቃላት &nbsp;·&nbsp; <small style="color:#c0392b;cursor:pointer;" onclick="document.getElementById('profilePhotoInput').click()">Change photo</small></p>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat"><span id="statStories">0</span><label>Stories</label></div>
+        <div class="stat"><span id="statReads">0</span><label>Total Reads</label></div>
+        <div class="stat"><span id="statLikes">0</span><label>Likes</label></div>
+      </div>
+      <h3>My Published Stories</h3>
+      <div class="story-grid" id="myStoriesGrid"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH RESULTS PAGE -->
+  <div id="page-search" class="page">
+    <div class="section">
+      <h2>Search Results for: <span id="searchQuery"></span></h2>
+      <div class="story-grid" id="searchGrid"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>📖 ቃላት Qalat — Ethiopia's Story Platform &nbsp;|&nbsp; Made with ❤️ for Ethiopian readers & writers</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

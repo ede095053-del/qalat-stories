@@ -1,0 +1,11 @@
+{
+  "name": "qalat-ethiopian-stories",
+  "version": "1.0.0",
+  "description": "Ethiopian Story Platform - Wattpad for Ethiopia",
+  "scripts": {
+    "start": "npx serve -s . -l 3000"
+  },
+  "keywords": ["ethiopian", "stories", "wattpad", "amharic"],
+  "author": "",
+  "license": "MIT"
+}
