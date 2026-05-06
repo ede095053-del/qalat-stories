@@ -22,7 +22,11 @@
       <input type="text" id="searchInput" placeholder="Search stories...">
       <button onclick="searchStories()">🔍</button>
     </div>
-  <button id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+    <select id="langToggle" onchange="switchLang(this.value)" title="Select language">
+      <option value="en">🌐 English</option>
+      <option value="am">🇪🇹 አማርኛ</option>
+    </select>
+    <button id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
   </nav>
 
   <!-- PAGES -->

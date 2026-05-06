@@ -446,6 +446,113 @@ function showToast(msg) {
 }
 
 
+// ===== LANGUAGE SWITCHER =====
+const translations = {
+  en: {
+    home: 'Home', browse: 'Browse', write: 'Write', profile: 'My Profile',
+    search: 'Search stories...',
+    heroSub: "Ethiopia's home for stories — read, write, and share in Amharic, Afaan Oromo, Tigrinya & more.",
+    startReading: 'Start Reading', startWriting: 'Start Writing',
+    browseGenre: 'Browse by Genre', trending: '🔥 Trending Stories', newArrivals: '✨ New Arrivals',
+    browseTitle: 'Browse Stories', allGenres: 'All Genres', allLangs: 'All Languages',
+    sortTrending: 'Trending', sortNew: 'Newest', sortReads: 'Most Read',
+    writeTitle: '✍️ Publish Your Story',
+    storyTitleL: 'Story Title', authorL: 'Author Name', descL: 'Description',
+    genreL: 'Genre', langL: 'Language', ch1TitleL: 'Chapter 1 Title', ch1ContentL: 'Chapter 1 Content',
+    publishBtn: '📤 Publish Story', readNow: 'Read Now',
+    chapters: 'Chapters', comments: 'Comments', postComment: 'Post Comment',
+    yourName: 'Your name', yourThoughts: 'Share your thoughts...',
+    myStories: 'My Published Stories', back: '← Back'
+  },
+  am: {
+    home: 'መነሻ', browse: 'ፈልግ', write: 'ጻፍ', profile: 'መገለጫዬ',
+    search: 'ታሪኮችን ፈልግ...',
+    heroSub: 'ኢትዮጵያ የታሪኮች ቤት — በአማርኛ፣ ኦሮምኛ፣ ትግርኛ እና ሌሎች ቋንቋዎች ያንብቡ፣ ይጻፉ እና ያጋሩ።',
+    startReading: 'ማንበብ ጀምር', startWriting: 'መጻፍ ጀምር',
+    browseGenre: 'በዘርፍ ፈልግ', trending: '🔥 ተወዳጅ ታሪኮች', newArrivals: '✨ አዲስ ታሪኮች',
+    browseTitle: 'ታሪኮችን ፈልግ', allGenres: 'ሁሉም ዘርፎች', allLangs: 'ሁሉም ቋንቋዎች',
+    sortTrending: 'ተወዳጅ', sortNew: 'አዲስ', sortReads: 'ብዙ የተነበበ',
+    writeTitle: '✍️ ታሪክህን አሳትም',
+    storyTitleL: 'የታሪክ ርዕስ', authorL: 'የደራሲ ስም', descL: 'መግለጫ',
+    genreL: 'ዘርፍ', langL: 'ቋንቋ', ch1TitleL: 'የምዕራፍ 1 ርዕስ', ch1ContentL: 'የምዕራፍ 1 ይዘት',
+    publishBtn: '📤 ታሪክ አሳትም', readNow: 'አሁን አንብብ',
+    chapters: 'ምዕራፎች', comments: 'አስተያየቶች', postComment: 'አስተያየት ለጥፍ',
+    yourName: 'ስምህ', yourThoughts: 'ሃሳብህን አጋራ...',
+    myStories: 'የታተሙ ታሪኮቼ', back: '← ተመለስ'
+  }
+};
+
+let currentLang = 'en';
+
+function switchLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  const t = translations[lang];
+
+  // Navbar
+  document.querySelector('.nav-links button:nth-child(1)').textContent = t.home;
+  document.querySelector('.nav-links button:nth-child(2)').textContent = t.browse;
+  document.querySelector('.nav-links button:nth-child(3)').textContent = t.write;
+  document.querySelector('.nav-links button:nth-child(4)').textContent = t.profile;
+  document.getElementById('searchInput').placeholder = t.search;
+
+  // Hero
+  const heroP = document.querySelector('.hero-content p');
+  if (heroP) heroP.textContent = t.heroSub;
+  const heroBtns = document.querySelectorAll('.hero-btns button');
+  if (heroBtns[0]) heroBtns[0].textContent = t.startReading;
+  if (heroBtns[1]) heroBtns[1].textContent = t.startWriting;
+
+  // Section headings
+  const h2s = document.querySelectorAll('.h2-text');
+  if (h2s[0]) h2s[0].textContent = t.browseGenre;
+  if (h2s[1]) h2s[1].textContent = t.trending;
+  if (h2s[2]) h2s[2].textContent = t.newArrivals;
+
+  // Browse
+  const browseH1 = document.querySelector('.browse-header h1');
+  if (browseH1) browseH1.textContent = t.browseTitle;
+  const genreFilter = document.getElementById('genreFilter');
+  if (genreFilter && genreFilter.options[0]) genreFilter.options[0].text = t.allGenres;
+  const langFilter = document.getElementById('langFilter');
+  if (langFilter && langFilter.options[0]) langFilter.options[0].text = t.allLangs;
+  const sortFilter = document.getElementById('sortFilter');
+  if (sortFilter) {
+    if (sortFilter.options[0]) sortFilter.options[0].text = t.sortTrending;
+    if (sortFilter.options[1]) sortFilter.options[1].text = t.sortNew;
+    if (sortFilter.options[2]) sortFilter.options[2].text = t.sortReads;
+  }
+
+  // Write form labels
+  const labels = document.querySelectorAll('.write-container .form-group label');
+  const labelMap = [t.storyTitleL, t.authorL, t.descL, t.genreL, t.langL];
+  labels.forEach((l, i) => { if (labelMap[i]) l.textContent = labelMap[i]; });
+  const writeH1 = document.querySelector('.write-container h1');
+  if (writeH1) writeH1.textContent = t.writeTitle;
+  const publishBtn = document.querySelector('.big-btn');
+  if (publishBtn) publishBtn.textContent = t.publishBtn;
+
+  // Comments
+  const commentH3 = document.querySelector('.comments-section h3');
+  if (commentH3) commentH3.textContent = t.comments;
+  const commentNameInput = document.getElementById('commentName');
+  if (commentNameInput) commentNameInput.placeholder = t.yourName;
+  const commentTextInput = document.getElementById('commentText');
+  if (commentTextInput) commentTextInput.placeholder = t.yourThoughts;
+  const postBtn = document.querySelector('.comments-section .btn-primary');
+  if (postBtn) postBtn.textContent = t.postComment;
+
+  // Profile
+  const myStoriesH3 = document.querySelector('.profile-container h3');
+  if (myStoriesH3) myStoriesH3.textContent = t.myStories;
+
+  // Back buttons
+  document.querySelectorAll('.back-btn').forEach(b => b.textContent = t.back);
+
+  // Re-render genre tags in new language
+  renderGenreTags();
+}
+
 // ===== DARK MODE =====
 function toggleDark() {
   const isDark = document.body.classList.toggle('dark');
@@ -466,3 +573,11 @@ function toggleDark() {
 // ===== INIT =====
 loadSampleStories();
 renderHome();
+
+// Restore saved language
+(function() {
+  const savedLang = localStorage.getItem('lang') || 'en';
+  const langToggle = document.getElementById('langToggle');
+  if (langToggle) langToggle.value = savedLang;
+  if (savedLang !== 'en') switchLang(savedLang);
+})();

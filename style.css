@@ -165,6 +165,31 @@ body.dark #darkToggle:hover {
   background: rgba(252,221,9,0.2);
 }
 
+/* Language toggle */
+#langToggle {
+  background: var(--bg2);
+  border: 2px solid var(--border);
+  border-radius: 50px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+  outline: none;
+}
+#langToggle:hover, #langToggle:focus {
+  border-color: var(--green);
+  background: rgba(7,137,48,0.08);
+}
+body.dark #langToggle {
+  background: rgba(252,221,9,0.08);
+  border-color: rgba(252,221,9,0.25);
+}
+#langToggle option { background: var(--bg2); color: var(--text); }
+
 /* ===== BUTTONS ===== */
 .btn-primary {
   background: linear-gradient(135deg, var(--green), var(--teal));
