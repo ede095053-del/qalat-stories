@@ -1,10 +1,114 @@
 ﻿// ===== STATE =====
+const API = '';
 let stories = [];
 let currentStoryId = null;
 let currentChapterIndex = 0;
 let myStoryIds = [];
 let coverPhotoData = null;
 let chapterImageDatas = [];
+let currentUser = null;
+let authToken = localStorage.getItem('qalat_token') || null;
+
+// ===== API HELPER =====
+async function apiFetch(url, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  try {
+    const res = await fetch(API + url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+    return await res.json();
+  } catch (e) {
+    return { error: 'Network error' };
+  }
+}
+
+// ===== AUTH FUNCTIONS =====
+function showAuthModal() {
+  document.getElementById('authModal').classList.remove('hidden');
+}
+function hideAuthModal() {
+  document.getElementById('authModal').classList.add('hidden');
+}
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('signupError').textContent = '';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
+  const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+  if (data.error) { errEl.textContent = data.error; return; }
+  authToken = data.token;
+  currentUser = data.user;
+  localStorage.setItem('qalat_token', authToken);
+  updateNavAuth();
+  hideAuthModal();
+  showToast('👋 Welcome back, ' + currentUser.username + '!');
+  renderHome();
+}
+
+async function doSignup() {
+  const username = document.getElementById('signupUsername').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const errEl = document.getElementById('signupError');
+  errEl.textContent = '';
+  if (!username || !email || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  const data = await apiFetch('/api/auth/signup', { method: 'POST', body: JSON.stringify({ username, email, password }) });
+  if (data.error) { errEl.textContent = data.error; return; }
+  authToken = data.token;
+  currentUser = data.user;
+  localStorage.setItem('qalat_token', authToken);
+  updateNavAuth();
+  hideAuthModal();
+  showToast('🎉 Welcome to ቃላት, ' + currentUser.username + '!');
+  renderHome();
+}
+
+function doLogout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('qalat_token');
+  myStoryIds = [];
+  updateNavAuth();
+  showToast('👋 Logged out.');
+  showPage('home');
+}
+
+function updateNavAuth() {
+  const navUser = document.getElementById('navUser');
+  const navLoginBtn = document.getElementById('navLoginBtn');
+  const navUsername = document.getElementById('navUsername');
+  if (currentUser) {
+    navUser.style.display = 'flex';
+    navLoginBtn.style.display = 'none';
+    navUsername.textContent = '👤 ' + currentUser.username;
+    document.getElementById('profileName').textContent = currentUser.username;
+  } else {
+    navUser.style.display = 'none';
+    navLoginBtn.style.display = 'inline-flex';
+  }
+}
+
+async function restoreSession() {
+  if (!authToken) return;
+  const data = await apiFetch('/api/auth/me');
+  if (data.error) {
+    authToken = null;
+    localStorage.removeItem('qalat_token');
+    return;
+  }
+  currentUser = data;
+  updateNavAuth();
+}
 
 // ===== SAMPLE DATA =====
 function loadSampleStories() {
@@ -256,11 +360,8 @@ function openStory(id) {
   // Show Add Chapter button only if this is the author's story
   const addBtn = document.getElementById('addChapterBtn');
   const addForm = document.getElementById('addChapterForm');
-  if (myStoryIds.includes(s.id)) {
-    addBtn.style.display = 'inline-flex';
-  } else {
-    addBtn.style.display = 'none';
-  }
+  const isMyStory = (currentUser && s.authorId === currentUser.id) || myStoryIds.includes(s.id);
+  addBtn.style.display = isMyStory ? 'inline-flex' : 'none';
   addForm.style.display = 'none';
   document.getElementById('newChTitle').value = '';
   document.getElementById('newChContent').value = '';
@@ -299,12 +400,18 @@ function nextChapter() {
 }
 
 // ===== LIKE =====
-function likeStory() {
+async function likeStory() {
+  if (!currentUser) { showAuthModal(); return; }
   const s = stories.find(x => x.id === currentStoryId);
   if (!s) return;
-  s.likes++;
+  if (typeof s.id === 'number' && s.id > 4) {
+    const data = await apiFetch('/api/stories/' + s.id + '/like', { method: 'POST' });
+    if (data.alreadyLiked) { showToast('You already liked this story!'); return; }
+    if (data.likes !== undefined) s.likes = data.likes;
+  } else {
+    s.likes++;
+  }
   document.getElementById('readLikes').textContent = '❤️ ' + fmtNum(s.likes);
-  saveToStorage();
   showToast('❤️ Liked!');
 }
 
@@ -322,14 +429,21 @@ function renderComments(s, chIndex) {
   });
 }
 
-function addComment() {
-  const name = document.getElementById('commentName').value.trim();
+async function addComment() {
+  if (!currentUser) { showAuthModal(); showToast('Please login to comment.'); return; }
+  const name = document.getElementById('commentName').value.trim() || currentUser.username;
   const text = document.getElementById('commentText').value.trim();
-  if (!name || !text) { showToast('Please enter your name and comment.'); return; }
+  if (!text) { showToast('Please write a comment.'); return; }
   const s = stories.find(x => x.id === currentStoryId);
   if (!s) return;
-  s.comments.push({ name, text });
-  saveToStorage();
+
+  if (typeof s.id === 'number' && s.id > 4) {
+    const comments = await apiFetch('/api/stories/' + s.id + '/comments', { method: 'POST', body: JSON.stringify({ text }) });
+    if (!comments.error) s.comments = comments;
+  } else {
+    s.comments.push({ name, text });
+  }
+
   document.getElementById('commentName').value = '';
   document.getElementById('commentText').value = '';
   renderComments(s, currentChapterIndex);
@@ -458,10 +572,11 @@ function closePreview() {
   showPage('write');
 }
 
-function submitStory(e) {
+async function submitStory(e) {
   e.preventDefault();
+  if (!currentUser) { showAuthModal(); showToast('Please login to publish a story.'); return; }
+
   const title = document.getElementById('storyTitle').value.trim();
-  const author = document.getElementById('authorName').value.trim();
   const desc = document.getElementById('storyDesc').value.trim();
   const genre = getSelectedGenres();
   const lang = getSelectedLangs();
@@ -470,22 +585,19 @@ function submitStory(e) {
   const ch1Title = document.getElementById('ch1Title').value.trim();
   const ch1Content = document.getElementById('ch1Content').value.trim();
 
-  const newStory = {
-    id: Date.now(),
-    title, author, genre, language: lang, description: desc,
+  const payload = {
+    title, genre, language: lang, description: desc,
     emoji, color,
     coverPhoto: coverPhotoData || null,
-    reads: 0, likes: 0, trending: false,
-    createdAt: Date.now(),
-    chapters: [{ title: ch1Title, content: ch1Content, images: [...chapterImageDatas] }],
-    comments: []
+    chapters: [{ title: ch1Title, content: ch1Content, images: [...chapterImageDatas] }]
   };
+
+  const newStory = await apiFetch('/api/stories', { method: 'POST', body: JSON.stringify(payload) });
+  if (newStory.error) { showToast('Error: ' + newStory.error); return; }
 
   stories.unshift(newStory);
   myStoryIds.push(newStory.id);
-  saveToStorage();
 
-  // reset
   document.getElementById('storyForm').reset();
   coverPhotoData = null;
   chapterImageDatas = [];
@@ -499,7 +611,8 @@ function submitStory(e) {
 
 // ===== PROFILE =====
 function renderProfile() {
-  const myStories = stories.filter(s => myStoryIds.includes(s.id));
+  if (!currentUser) { showAuthModal(); return; }
+  const myStories = stories.filter(s => s.authorId === currentUser.id || myStoryIds.includes(s.id));
   document.getElementById('statStories').textContent = myStories.length;
   document.getElementById('statReads').textContent = fmtNum(myStories.reduce((a, s) => a + s.reads, 0));
   document.getElementById('statLikes').textContent = fmtNum(myStories.reduce((a, s) => a + s.likes, 0));
@@ -577,7 +690,7 @@ function previewNewChImages(event) {
   });
 }
 
-function saveNewChapter() {
+async function saveNewChapter() {
   const title = document.getElementById('newChTitle').value.trim();
   const content = document.getElementById('newChContent').value.trim();
   if (!title) { showToast('Please enter a chapter title.'); return; }
@@ -586,8 +699,31 @@ function saveNewChapter() {
   const s = stories.find(x => x.id === currentStoryId);
   if (!s) return;
 
-  s.chapters.push({ title, content, images: [...newChapterImageDatas] });
-  saveToStorage();
+  const chapter = { title, content, images: [...newChapterImageDatas] };
+
+  // If it's a real API story, save to server
+  if (typeof s.id === 'number' && s.id > 4) {
+    const updated = await apiFetch('/api/stories/' + s.id + '/chapters', { method: 'POST', body: JSON.stringify(chapter) });
+    if (updated.error) { showToast('Error: ' + updated.error); return; }
+    s.chapters = updated.chapters;
+  } else {
+    s.chapters.push(chapter);
+  }
+
+  document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
+  const chList = document.getElementById('chapterList');
+  chList.innerHTML = '<h3>Chapters</h3>';
+  s.chapters.forEach((ch, i) => {
+    const item = document.createElement('div');
+    item.className = 'chapter-item';
+    item.innerHTML = `<span>${ch.title}</span><small>Chapter ${i + 1}</small>`;
+    item.onclick = () => openChapter(i);
+    chList.appendChild(item);
+  });
+
+  cancelAddChapter();
+  showToast('🎉 Chapter ' + s.chapters.length + ' published!');
+}
 
   // Update chapter count display
   document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
@@ -760,9 +896,27 @@ function loadFromStorage() {
 }
 
 // ===== INIT =====
-loadSampleStories();
-loadFromStorage();
-renderHome();
+async function init() {
+  loadSampleStories();
+  // Load stories from server
+  const serverStories = await apiFetch('/api/stories');
+  if (Array.isArray(serverStories)) {
+    // Merge: server stories first, then sample stories
+    stories = [...serverStories, ...stories];
+    // Track which stories belong to current user
+    if (currentUser) {
+      myStoryIds = serverStories.filter(s => s.authorId === currentUser.id).map(s => s.id);
+    }
+  }
+  await restoreSession();
+  renderHome();
+  // Hide auth modal if already logged in, show if not
+  if (currentUser) {
+    hideAuthModal();
+  }
+}
+
+init();
 
 // Restore saved language
 (function() {

@@ -1,11 +1,12 @@
-{
+﻿{
   "name": "qalat-ethiopian-stories",
   "version": "1.0.0",
-  "description": "Ethiopian Story Platform - Wattpad for Ethiopia",
-  "scripts": {
-    "start": "npx serve -s . -l 3000"
-  },
-  "keywords": ["ethiopian", "stories", "wattpad", "amharic"],
-  "author": "",
-  "license": "MIT"
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "4.18.2",
+    "cors": "2.8.5",
+    "bcryptjs": "2.4.3",
+    "jsonwebtoken": "9.0.0"
+  }
 }
