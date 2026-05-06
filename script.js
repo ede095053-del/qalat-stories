@@ -209,7 +209,7 @@ function filterStories() {
   const sort = document.getElementById('sortFilter').value;
 
   let list = [...stories];
-  if (genre !== 'all') list = list.filter(s => s.genre === genre);
+  if (genre !== 'all') list = list.filter(s => s.genre && s.genre.includes(genre));
   if (lang !== 'all') list = list.filter(s => s.language && s.language.includes(lang));
   if (sort === 'new') list.sort((a, b) => b.createdAt - a.createdAt);
   else if (sort === 'reads') list.sort((a, b) => b.reads - a.reads);
@@ -374,11 +374,17 @@ function getSelectedLangs() {
   return langs.length ? langs.join(', ') : 'Amharic';
 }
 
+function getSelectedGenres() {
+  const checked = document.querySelectorAll('#storyGenreGroup input:checked');
+  const genres = Array.from(checked).map(c => c.value);
+  return genres.length ? genres.join(', ') : 'Drama';
+}
+
 function previewStory() {
   const title = document.getElementById('storyTitle').value.trim() || 'Untitled Story';
   const author = document.getElementById('authorName').value.trim() || 'Anonymous';
   const desc = document.getElementById('storyDesc').value.trim() || 'No description.';
-  const genre = document.getElementById('storyGenre').value;
+  const genre = getSelectedGenres();
   const lang = getSelectedLangs();
   const emoji = document.getElementById('coverEmoji').value || '📖';
   const color = document.getElementById('coverColor').value;
@@ -443,7 +449,7 @@ function submitStory(e) {
   const title = document.getElementById('storyTitle').value.trim();
   const author = document.getElementById('authorName').value.trim();
   const desc = document.getElementById('storyDesc').value.trim();
-  const genre = document.getElementById('storyGenre').value;
+  const genre = getSelectedGenres();
   const lang = getSelectedLangs();
   const emoji = document.getElementById('coverEmoji').value || '📖';
   const color = document.getElementById('coverColor').value;

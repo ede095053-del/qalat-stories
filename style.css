@@ -849,10 +849,22 @@ body.dark .story-card:hover {
   color: var(--green);
 }
 
+/* Genre-specific checked colors */
+.genre-romance:has(input:checked)  { background: rgba(218,18,26,0.12);  border-color: #DA121A; color: #DA121A; }
+.genre-drama:has(input:checked)    { background: rgba(124,58,237,0.12); border-color: #7c3aed; color: #7c3aed; }
+.genre-mystery:has(input:checked)  { background: rgba(30,30,30,0.12);   border-color: #555;    color: #555; }
+.genre-fantasy:has(input:checked)  { background: rgba(8,145,178,0.12);  border-color: #0891b2; color: #0891b2; }
+.genre-history:has(input:checked)  { background: rgba(180,83,9,0.12);   border-color: #b45309; color: #b45309; }
+.genre-comedy:has(input:checked)   { background: rgba(252,221,9,0.18);  border-color: #b8960a; color: #b8960a; }
+.genre-thriller:has(input:checked) { background: rgba(220,38,38,0.12);  border-color: #dc2626; color: #dc2626; }
+.genre-poetry:has(input:checked)   { background: rgba(236,72,153,0.12); border-color: #ec4899; color: #ec4899; }
+.genre-religion:has(input:checked) { background: rgba(7,137,48,0.12);   border-color: #078930; color: #078930; }
+.genre-youth:has(input:checked)    { background: rgba(234,88,12,0.12);  border-color: #ea580c; color: #ea580c; }
+
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  grid-template-columns: 1fr;
+  gap: 0;
 }
 
 .cover-picker {
