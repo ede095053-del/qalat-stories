@@ -746,24 +746,6 @@ async function saveNewChapter() {
   showToast('🎉 Chapter ' + s.chapters.length + ' published!');
 }
 
-  // Update chapter count display
-  document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
-
-  // Rebuild chapter list
-  const chList = document.getElementById('chapterList');
-  chList.innerHTML = '<h3>Chapters</h3>';
-  s.chapters.forEach((ch, i) => {
-    const item = document.createElement('div');
-    item.className = 'chapter-item';
-    item.innerHTML = `<span>${ch.title}</span><small>Chapter ${i + 1}</small>`;
-    item.onclick = () => openChapter(i);
-    chList.appendChild(item);
-  });
-
-  cancelAddChapter();
-  showToast('🎉 Chapter ' + s.chapters.length + ' published!');
-}
-
 // ===== LANGUAGE SWITCHER =====
 const translations = {
   en: {
