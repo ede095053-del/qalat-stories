@@ -1,4 +1,10 @@
 ﻿// ===== STATE =====
+// Apply saved theme immediately (before render to avoid flash)
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark');
+  document.documentElement.classList.add('dark');
+}
+
 const API = '';
 let stories = [];
 let currentStoryId = null;
@@ -858,18 +864,19 @@ function switchLang(lang) {
 // ===== DARK MODE =====
 function toggleDark() {
   const isDark = document.body.classList.toggle('dark');
+  document.documentElement.classList.toggle('dark', isDark);
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  document.getElementById('darkToggle').textContent = isDark ? '☀️' : '🌙';
+  const btn = document.getElementById('darkToggle');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
 }
 
-// Apply saved theme on load
+// Apply saved theme immediately
 (function() {
   if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark');
-    window.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('darkToggle');
-      if (btn) btn.textContent = '☀️';
-    });
+    document.documentElement.classList.add('dark');
+    const btn = document.getElementById('darkToggle');
+    if (btn) btn.textContent = '☀️';
   }
 })();
 // ===== PERSIST TO LOCALSTORAGE =====

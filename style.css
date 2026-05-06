@@ -29,6 +29,10 @@ body.dark {
   --shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 
+html.dark {
+  background: #0a0a0f;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
