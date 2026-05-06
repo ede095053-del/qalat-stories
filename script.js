@@ -117,6 +117,11 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   window.scrollTo(0, 0);
+  // Remove preview banner if navigating away from preview
+  if (name !== 'read' && name !== 'chapter') {
+    const banner = document.getElementById('previewBanner');
+    if (banner) banner.remove();
+  }
   if (name === 'home') renderHome();
   if (name === 'browse') renderBrowse();
   if (name === 'profile') renderProfile();
@@ -363,6 +368,70 @@ function changeProfilePhoto(event) {
 }
 
 // ===== WRITE / SUBMIT STORY =====
+function previewStory() {
+  const title = document.getElementById('storyTitle').value.trim() || 'Untitled Story';
+  const author = document.getElementById('authorName').value.trim() || 'Anonymous';
+  const desc = document.getElementById('storyDesc').value.trim() || 'No description.';
+  const genre = document.getElementById('storyGenre').value;
+  const lang = document.getElementById('storyLang').value;
+  const emoji = document.getElementById('coverEmoji').value || '📖';
+  const color = document.getElementById('coverColor').value;
+  const ch1Title = document.getElementById('ch1Title').value.trim() || 'Chapter 1';
+  const ch1Content = document.getElementById('ch1Content').value.trim() || 'No content yet.';
+
+  // Build a temporary preview story object
+  const preview = {
+    id: '__preview__',
+    title, author, genre, language: lang, description: desc,
+    emoji, color,
+    coverPhoto: coverPhotoData || null,
+    reads: 0, likes: 0,
+    chapters: [{ title: ch1Title, content: ch1Content, images: [...chapterImageDatas] }],
+    comments: []
+  };
+
+  // Inject into stories temporarily
+  const existing = stories.findIndex(s => s.id === '__preview__');
+  if (existing >= 0) stories.splice(existing, 1);
+  stories.unshift(preview);
+
+  // Show the read page with a preview banner
+  openStory('__preview__');
+
+  // Add preview banner
+  setTimeout(() => {
+    const existing = document.getElementById('previewBanner');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.id = 'previewBanner';
+    banner.innerHTML = `
+      <span>👁️ Preview Mode — this is how readers will see your story</span>
+      <button onclick="closePreview()">← Back to Editor</button>
+    `;
+    Object.assign(banner.style, {
+      position: 'fixed', top: '64px', left: '0', right: '0',
+      background: 'linear-gradient(135deg, #078930, #0891b2)',
+      color: '#fff', padding: '10px 24px',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      zIndex: '999', fontSize: '0.9rem', fontWeight: '600',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.2)'
+    });
+    banner.querySelector('button').style.cssText =
+      'background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit;';
+    document.body.appendChild(banner);
+  }, 100);
+}
+
+function closePreview() {
+  // Remove preview story
+  const idx = stories.findIndex(s => s.id === '__preview__');
+  if (idx >= 0) stories.splice(idx, 1);
+  // Remove banner
+  const banner = document.getElementById('previewBanner');
+  if (banner) banner.remove();
+  showPage('write');
+}
+
 function submitStory(e) {
   e.preventDefault();
   const title = document.getElementById('storyTitle').value.trim();

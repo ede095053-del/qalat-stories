@@ -899,6 +899,13 @@ body.dark .story-card:hover {
   margin-top: 0.5rem;
 }
 
+.form-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 /* ===== PROFILE PAGE ===== */
 .profile-container {
   max-width: 900px;
