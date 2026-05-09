@@ -182,6 +182,52 @@ app.post('/api/stories/:id/read', async (req, res) => {
   }
 });
 
+// Edit story info
+app.put('/api/stories/:id', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (String(story.authorId) !== String(req.user.id))
+      return res.status(403).json({ error: 'Not your story' });
+    const { title, description, emoji, color } = req.body;
+    if (title) story.title = title;
+    if (description) story.description = description;
+    if (emoji) story.emoji = emoji;
+    if (color) story.color = color;
+    await story.save();
+    res.json(story);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Edit a chapter
+app.put('/api/stories/:id/chapters/:chIndex', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (String(story.authorId) !== String(req.user.id))
+      return res.status(403).json({ error: 'Not your story' });
+    const ch = story.chapters[req.params.chIndex];
+    if (!ch) return res.status(404).json({ error: 'Chapter not found' });
+    if (req.body.title) ch.title = req.body.title;
+    if (req.body.content) ch.content = req.body.content;
+    await story.save();
+    res.json(story);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Delete a chapter
+app.delete('/api/stories/:id/chapters/:chIndex', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (String(story.authorId) !== String(req.user.id))
+      return res.status(403).json({ error: 'Not your story' });
+    story.chapters.splice(req.params.chIndex, 1);
+    await story.save();
+    res.json(story);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/stories/:id/comments', authMiddleware, async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);

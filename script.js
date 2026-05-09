@@ -385,6 +385,7 @@ function openStory(id) {
   const addForm = document.getElementById('addChapterForm');
   const isMyStory = (currentUser && s.authorId === currentUser.id) || myStoryIds.includes(s.id);
   addBtn.style.display = isMyStory ? 'inline-flex' : 'none';
+  document.getElementById('editStoryBtn').style.display = isMyStory ? 'inline-flex' : 'none';
   addForm.style.display = 'none';
   document.getElementById('newChTitle').value = '';
   document.getElementById('newChContent').value = '';
@@ -738,6 +739,147 @@ function showToast(msg) {
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2500);
 }
 
+
+// ===== EDIT STORY =====
+let editingChapterIndex = null;
+
+function showEditStory() {
+  const s = findCurrentStory();
+  if (!s) return;
+  document.getElementById('editTitle').value = s.title || '';
+  document.getElementById('editDesc').value = s.description || '';
+  document.getElementById('editEmoji').value = s.emoji || '📖';
+  document.getElementById('editColor').value = s.color || '#c0392b';
+  document.getElementById('editInfoError').textContent = '';
+  switchEditTab('info');
+  const m = document.getElementById('editModal');
+  m.classList.remove('hidden');
+  m.style.display = 'flex';
+}
+
+function closeEditModal() {
+  const m = document.getElementById('editModal');
+  m.classList.add('hidden');
+  m.style.display = 'none';
+}
+
+function switchEditTab(tab) {
+  document.getElementById('editInfoTab').style.display = tab === 'info' ? 'block' : 'none';
+  document.getElementById('editChaptersTab').style.display = tab === 'chapters' ? 'block' : 'none';
+  document.getElementById('editTab1').classList.toggle('active', tab === 'info');
+  document.getElementById('editTab2').classList.toggle('active', tab === 'chapters');
+  if (tab === 'chapters') renderEditChapters();
+}
+
+function renderEditChapters() {
+  const s = findCurrentStory();
+  if (!s) return;
+  const list = document.getElementById('editChaptersList');
+  list.innerHTML = '';
+  if (!s.chapters.length) {
+    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">No chapters yet.</p>';
+    return;
+  }
+  s.chapters.forEach((ch, i) => {
+    const div = document.createElement('div');
+    div.className = 'edit-chapter-item';
+    div.innerHTML = `
+      <span>Ch.${i+1}: ${ch.title}</span>
+      <div class="edit-chapter-btns">
+        <button class="btn-edit-ch" onclick="openEditChapter(${i})">✏️ Edit</button>
+        <button class="btn-del-ch" onclick="deleteChapter(${i})">🗑️ Delete</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+async function saveStoryInfo() {
+  const s = findCurrentStory();
+  if (!s) return;
+  const title = document.getElementById('editTitle').value.trim();
+  const description = document.getElementById('editDesc').value.trim();
+  const emoji = document.getElementById('editEmoji').value.trim();
+  const color = document.getElementById('editColor').value;
+  const errEl = document.getElementById('editInfoError');
+  if (!title) { errEl.textContent = 'Title cannot be empty.'; return; }
+
+  const storyId = s._id || s.id;
+  const updated = await apiFetch('/api/stories/' + storyId, {
+    method: 'PUT',
+    body: JSON.stringify({ title, description, emoji, color })
+  });
+  if (updated.error) { errEl.textContent = updated.error; return; }
+
+  // Update local story
+  s.title = updated.title;
+  s.description = updated.description;
+  s.emoji = updated.emoji;
+  s.color = updated.color;
+
+  // Refresh the read page
+  document.getElementById('readTitle').textContent = s.title;
+  document.getElementById('readDesc').textContent = s.description;
+  if (!s.coverPhoto) {
+    document.getElementById('readCover').textContent = s.emoji;
+    document.getElementById('readCover').style.background = s.color;
+  }
+  closeEditModal();
+  showToast('✅ Story updated!');
+}
+
+function openEditChapter(index) {
+  const s = findCurrentStory();
+  if (!s || !s.chapters[index]) return;
+  editingChapterIndex = index;
+  document.getElementById('editChTitle').value = s.chapters[index].title || '';
+  document.getElementById('editChContent').value = s.chapters[index].content || '';
+  document.getElementById('editChError').textContent = '';
+  const m = document.getElementById('editChapterModal');
+  m.classList.remove('hidden');
+  m.style.display = 'flex';
+}
+
+function closeEditChapter() {
+  const m = document.getElementById('editChapterModal');
+  m.classList.add('hidden');
+  m.style.display = 'none';
+  editingChapterIndex = null;
+}
+
+async function saveChapterEdit() {
+  const s = findCurrentStory();
+  if (!s || editingChapterIndex === null) return;
+  const title = document.getElementById('editChTitle').value.trim();
+  const content = document.getElementById('editChContent').value.trim();
+  const errEl = document.getElementById('editChError');
+  if (!title) { errEl.textContent = 'Title cannot be empty.'; return; }
+  if (!content) { errEl.textContent = 'Content cannot be empty.'; return; }
+
+  const storyId = s._id || s.id;
+  const updated = await apiFetch(`/api/stories/${storyId}/chapters/${editingChapterIndex}`, {
+    method: 'PUT',
+    body: JSON.stringify({ title, content })
+  });
+  if (updated.error) { errEl.textContent = updated.error; return; }
+
+  s.chapters = updated.chapters;
+  closeEditChapter();
+  renderEditChapters();
+  showToast('✅ Chapter updated!');
+}
+
+async function deleteChapter(index) {
+  if (!confirm('Delete this chapter? This cannot be undone.')) return;
+  const s = findCurrentStory();
+  if (!s) return;
+  const storyId = s._id || s.id;
+  const updated = await apiFetch(`/api/stories/${storyId}/chapters/${index}`, { method: 'DELETE' });
+  if (updated.error) { showToast('Error: ' + updated.error); return; }
+  s.chapters = updated.chapters;
+  renderEditChapters();
+  document.getElementById('readChapters').textContent = '📄 ' + s.chapters.length + ' chapters';
+  showToast('🗑️ Chapter deleted.');
+}
 
 // ===== ADD CHAPTER =====
 let newChapterImageDatas = [];

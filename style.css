@@ -1443,3 +1443,92 @@ body.dark .story-card:hover {
 .share-btn.twitter   { background: #1da1f2; }
 .share-btn.copy      { background: var(--orange); }
 .share-btn.native    { background: var(--purple); }
+
+/* ===== EDIT MODAL ===== */
+.edit-box {
+  max-width: 560px !important;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.edit-modal-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.edit-close-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 1rem;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.edit-close-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-edit-story {
+  background: linear-gradient(135deg, #b45309, #ea580c);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(180,83,9,0.3);
+}
+.btn-edit-story:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.edit-chapter-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.edit-chapter-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.edit-chapter-btns { display: flex; gap: 0.4rem; }
+.btn-edit-ch {
+  background: rgba(8,145,178,0.15);
+  border: 1px solid rgba(8,145,178,0.3);
+  border-radius: 7px;
+  color: var(--teal);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-edit-ch:hover { background: var(--teal); color: #fff; }
+.btn-del-ch {
+  background: rgba(218,18,26,0.12);
+  border: 1px solid rgba(218,18,26,0.25);
+  border-radius: 7px;
+  color: var(--red);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-del-ch:hover { background: var(--red); color: #fff; }
