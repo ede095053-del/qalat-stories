@@ -521,9 +521,11 @@ async function addComment() {
   if (!text) { showToast('Please write a comment.'); return; }
   const s = findCurrentStory();
   if (!s) return;
+  const storyId = s._id || s.id;
+  const isSample = typeof s.id === 'number' && s.id <= 4;
 
-  if (typeof s.id === 'number' && s.id > 4) {
-    const comments = await apiFetch('/api/stories/' + s.id + '/comments', { method: 'POST', body: JSON.stringify({ text }) });
+  if (!isSample) {
+    const comments = await apiFetch('/api/stories/' + storyId + '/comments', { method: 'POST', body: JSON.stringify({ text }) });
     if (!comments.error) s.comments = comments;
   } else {
     s.comments.push({ name, text });
@@ -926,10 +928,15 @@ async function saveNewChapter() {
   if (!s) return;
 
   const chapter = { title, content, images: [...newChapterImageDatas] };
+  const storyId = s._id || s.id;
+  const isSample = typeof s.id === 'number' && s.id <= 4;
 
-  // If it's a real API story, save to server
-  if (typeof s.id === 'number' && s.id > 4) {
-    const updated = await apiFetch('/api/stories/' + s.id + '/chapters', { method: 'POST', body: JSON.stringify(chapter) });
+  if (!isSample) {
+    // Save to MongoDB
+    const updated = await apiFetch('/api/stories/' + storyId + '/chapters', {
+      method: 'POST',
+      body: JSON.stringify(chapter)
+    });
     if (updated.error) { showToast('Error: ' + updated.error); return; }
     s.chapters = updated.chapters;
   } else {
