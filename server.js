@@ -1,39 +1,64 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'qalat_secret_2024';
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
-const STORIES_FILE = path.join(__dirname, 'data', 'stories.json');
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://qalat:qalat2024@cluster0.llbk9as.mongodb.net/qalat?retryWrites=true&w=majority';
 
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(__dirname));
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-function ensureData() {
-  const dir = path.join(__dirname, 'data');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
-  if (!fs.existsSync(STORIES_FILE)) fs.writeFileSync(STORIES_FILE, '[]');
-}
+// ── Mongoose Schemas ──────────────────────────────────────────────────────────
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email:    { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  createdAt:{ type: Date, default: Date.now }
+});
 
-function readJSON(file) {
-  ensureData();
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
-  catch { return []; }
-}
+const chapterSchema = new mongoose.Schema({
+  title:   String,
+  content: String,
+  images:  [String],
+  createdAt: { type: Date, default: Date.now }
+});
 
-function writeJSON(file, data) {
-  ensureData();
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
+const commentSchema = new mongoose.Schema({
+  name:   String,
+  text:   String,
+  userId: mongoose.Schema.Types.Mixed,
+  createdAt: { type: Date, default: Date.now }
+});
 
+const storySchema = new mongoose.Schema({
+  title:      String,
+  authorId:   mongoose.Schema.Types.Mixed,
+  authorName: String,
+  genre:      String,
+  language:   String,
+  description:String,
+  emoji:      String,
+  color:      String,
+  coverPhoto: String,
+  reads:      { type: Number, default: 0 },
+  likes:      { type: Number, default: 0 },
+  likedBy:    [mongoose.Schema.Types.Mixed],
+  trending:   { type: Boolean, default: false },
+  chapters:   [chapterSchema],
+  comments:   [commentSchema],
+  createdAt:  { type: Date, default: Date.now }
+});
+
+const User  = mongoose.model('User',  userSchema);
+const Story = mongoose.model('Story', storySchema);
+
+// ── Auth middleware ───────────────────────────────────────────────────────────
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer '))
@@ -46,123 +71,141 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ── AUTH ─────────────────────────────────────────────────────────────────────
+// ── AUTH routes ───────────────────────────────────────────────────────────────
 app.post('/api/auth/signup', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password)
-    return res.status(400).json({ error: 'All fields required' });
+  try {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password)
+      return res.status(400).json({ error: 'All fields required' });
+    if (password.length < 6)
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-  const users = readJSON(USERS_FILE);
-  if (users.find(u => u.email === email))
-    return res.status(400).json({ error: 'Email already registered' });
-  if (users.find(u => u.username === username))
-    return res.status(400).json({ error: 'Username already taken' });
+    const exists = await User.findOne({ $or: [{ email }, { username }] });
+    if (exists) {
+      if (exists.email === email) return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: 'Username already taken' });
+    }
 
-  const hashed = await bcrypt.hash(password, 10);
-  const user = { id: Date.now(), username, email, password: hashed, createdAt: Date.now() };
-  users.push(user);
-  writeJSON(USERS_FILE, users);
-
-  const token = jwt.sign({ id: user.id, username, email }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, user: { id: user.id, username, email } });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, email, password: hashed });
+    const token = jwt.sign({ id: user._id, username, email }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user._id, username, email } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  const users = readJSON(USERS_FILE);
-  const user = users.find(u => u.email === email);
-  if (!user) return res.status(400).json({ error: 'No account with that email' });
-
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(400).json({ error: 'Wrong password' });
-
-  const token = jwt.sign({ id: user.id, username: user.username, email }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, user: { id: user.id, username: user.username, email } });
-});
-
-app.get('/api/auth/me', authMiddleware, (req, res) => {
-  const users = readJSON(USERS_FILE);
-  const user = users.find(u => u.id === req.user.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ id: user.id, username: user.username, email: user.email });
-});
-
-// ── STORIES ──────────────────────────────────────────────────────────────────
-app.get('/api/stories', (req, res) => {
-  res.json(readJSON(STORIES_FILE));
-});
-
-app.post('/api/stories', authMiddleware, (req, res) => {
-  const stories = readJSON(STORIES_FILE);
-  const story = {
-    ...req.body,
-    id: Date.now(),
-    authorId: req.user.id,
-    authorName: req.user.username,
-    reads: 0, likes: 0,
-    likedBy: [],
-    trending: false,
-    createdAt: Date.now(),
-    comments: [],
-    chapters: req.body.chapters || []
-  };
-  stories.unshift(story);
-  writeJSON(STORIES_FILE, stories);
-  res.json(story);
-});
-
-app.post('/api/stories/:id/chapters', authMiddleware, (req, res) => {
-  const stories = readJSON(STORIES_FILE);
-  const story = stories.find(s => String(s.id) === String(req.params.id));
-  if (!story) return res.status(404).json({ error: 'Story not found' });
-  if (String(story.authorId) !== String(req.user.id))
-    return res.status(403).json({ error: 'Not your story' });
-  story.chapters.push({ ...req.body, createdAt: Date.now() });
-  writeJSON(STORIES_FILE, stories);
-  res.json(story);
-});
-
-app.post('/api/stories/:id/like', authMiddleware, (req, res) => {
-  const stories = readJSON(STORIES_FILE);
-  const story = stories.find(s => String(s.id) === String(req.params.id));
-  if (!story) return res.status(404).json({ error: 'Story not found' });
-  story.likedBy = story.likedBy || [];
-  if (story.likedBy.includes(req.user.id)) {
-    return res.json({ likes: story.likes, alreadyLiked: true });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: 'No account with that email' });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ error: 'Wrong password' });
+    const token = jwt.sign({ id: user._id, username: user.username, email }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user._id, username: user.username, email } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-  story.likedBy.push(req.user.id);
-  story.likes = (story.likes || 0) + 1;
-  writeJSON(STORIES_FILE, stories);
-  res.json({ likes: story.likes });
 });
 
-app.post('/api/stories/:id/read', (req, res) => {
-  const stories = readJSON(STORIES_FILE);
-  const story = stories.find(s => String(s.id) === String(req.params.id));
-  if (!story) return res.status(404).json({ error: 'Story not found' });
-  story.reads = (story.reads || 0) + 1;
-  writeJSON(STORIES_FILE, stories);
-  res.json({ reads: story.reads });
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ id: user._id, username: user.username, email: user.email });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.post('/api/stories/:id/comments', authMiddleware, (req, res) => {
-  const stories = readJSON(STORIES_FILE);
-  const story = stories.find(s => String(s.id) === String(req.params.id));
-  if (!story) return res.status(404).json({ error: 'Story not found' });
-  story.comments = story.comments || [];
-  story.comments.push({
-    name: req.user.username,
-    text: req.body.text,
-    userId: req.user.id,
-    createdAt: Date.now()
-  });
-  writeJSON(STORIES_FILE, stories);
-  res.json(story.comments);
+// ── STORY routes ──────────────────────────────────────────────────────────────
+app.get('/api/stories', async (req, res) => {
+  try {
+    const stories = await Story.find().sort({ createdAt: -1 });
+    res.json(stories);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// serve frontend for all other routes
+app.post('/api/stories', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.create({
+      ...req.body,
+      authorId:   req.user.id,
+      authorName: req.user.username
+    });
+    res.json(story);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/stories/:id/chapters', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (String(story.authorId) !== String(req.user.id))
+      return res.status(403).json({ error: 'Not your story' });
+    story.chapters.push(req.body);
+    await story.save();
+    res.json(story);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/stories/:id/like', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (story.likedBy.map(String).includes(String(req.user.id)))
+      return res.json({ likes: story.likes, alreadyLiked: true });
+    story.likedBy.push(req.user.id);
+    story.likes += 1;
+    await story.save();
+    res.json({ likes: story.likes });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/stories/:id/read', async (req, res) => {
+  try {
+    const story = await Story.findByIdAndUpdate(
+      req.params.id, { $inc: { reads: 1 } }, { new: true }
+    );
+    res.json({ reads: story.reads });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/stories/:id/comments', authMiddleware, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    story.comments.push({ name: req.user.username, text: req.body.text, userId: req.user.id });
+    await story.save();
+    res.json(story.comments);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// serve frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Qalat running on http://localhost:${PORT}`));
+// ── Connect & Start ───────────────────────────────────────────────────────────
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => console.log(`🚀 Qalat running on port ${PORT}`));
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection failed:', err.message);
+    process.exit(1);
+  });
