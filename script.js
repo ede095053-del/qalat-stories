@@ -246,6 +246,8 @@ function showPage(name) {
   if (name !== 'read' && name !== 'chapter') {
     const banner = document.getElementById('previewBanner');
     if (banner) banner.remove();
+    const sharePanel = document.getElementById('sharePanel');
+    if (sharePanel) sharePanel.style.display = 'none';
   }
   if (name === 'home') renderHome();
   if (name === 'browse') renderBrowse();
@@ -448,6 +450,65 @@ function renderComments(s, chIndex) {
     div.innerHTML = `<div class="c-name">${c.name}</div><div class="c-text">${c.text}</div>`;
     list.appendChild(div);
   });
+}
+
+// ===== SHARE =====
+function shareStory() {
+  const panel = document.getElementById('sharePanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function getStoryShareUrl() {
+  const s = stories.find(x => x.id === currentStoryId || String(x._id) === String(currentStoryId));
+  const id = s ? (s._id || s.id) : currentStoryId;
+  return `${window.location.origin}?story=${id}`;
+}
+
+function shareVia(platform) {
+  const s = stories.find(x => x.id === currentStoryId || String(x._id) === String(currentStoryId));
+  const url = getStoryShareUrl();
+  const text = s ? `📖 Read "${s.title}" on ቃላት Qalat — Ethiopian Stories` : '📖 Check out this story on ቃላት Qalat';
+
+  if (platform === 'whatsapp') {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`, '_blank');
+  } else if (platform === 'telegram') {
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+  } else if (platform === 'twitter') {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  } else if (platform === 'copy') {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('📋 Link copied! Share it anywhere.');
+    }).catch(() => {
+      // fallback for older browsers
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('📋 Link copied!');
+    });
+  } else if (platform === 'native') {
+    if (navigator.share) {
+      navigator.share({ title: s ? s.title : 'ቃላት Story', text, url }).catch(() => {});
+    } else {
+      showToast('Use Copy Link instead on this browser.');
+    }
+  }
+}
+
+// Handle shared story link on page load
+function checkSharedStory() {
+  const params = new URLSearchParams(window.location.search);
+  const storyId = params.get('story');
+  if (!storyId) return;
+  // Try to find and open the story after stories load
+  const tryOpen = () => {
+    const s = stories.find(x => String(x._id) === storyId || String(x.id) === storyId);
+    if (s) openStory(s._id || s.id);
+  };
+  // Wait a moment for stories to load from API
+  setTimeout(tryOpen, 1500);
 }
 
 async function addComment() {
@@ -915,6 +976,7 @@ async function init() {
   await restoreSession();
   renderHome();
   hideAuthModal(); // always hidden on load
+  checkSharedStory(); // open story if shared link
 }
 
 init();

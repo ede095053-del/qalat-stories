@@ -153,9 +153,24 @@
             <span id="readChapters">📄 0 chapters</span>
           </div>
           <p id="readDesc"></p>
-          <button class="btn-primary" onclick="startReading()">Read Now</button>
-          <button class="btn-outline" onclick="likeStory()">❤️ Like</button>
-          <button class="btn-add-chapter" id="addChapterBtn" onclick="showAddChapter()" style="display:none;">✏️ Add Chapter</button>
+          <div class="story-action-btns">
+            <button class="btn-primary" onclick="startReading()">Read Now</button>
+            <button class="btn-outline" onclick="likeStory()">❤️ Like</button>
+            <button class="btn-share" onclick="shareStory()">🔗 Share</button>
+            <button class="btn-add-chapter" id="addChapterBtn" onclick="showAddChapter()" style="display:none;">✏️ Add Chapter</button>
+          </div>
+
+          <!-- Share Panel -->
+          <div id="sharePanel" class="share-panel" style="display:none;">
+            <p class="share-title">Share this story</p>
+            <div class="share-btns">
+              <button class="share-btn whatsapp" onclick="shareVia('whatsapp')">💬 WhatsApp</button>
+              <button class="share-btn telegram" onclick="shareVia('telegram')">✈️ Telegram</button>
+              <button class="share-btn twitter" onclick="shareVia('twitter')">🐦 Twitter/X</button>
+              <button class="share-btn copy" onclick="shareVia('copy')">📋 Copy Link</button>
+              <button class="share-btn native" onclick="shareVia('native')">📤 More...</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="chapter-list" id="chapterList"></div>
