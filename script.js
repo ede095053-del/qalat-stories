@@ -347,9 +347,9 @@ function filterStories() {
 
 // ===== OPEN STORY =====
 function openStory(id) {
-  const s = stories.find(x => x.id === id);
+  const s = stories.find(x => String(x._id || x.id) === String(id));
   if (!s) return;
-  currentStoryId = id;
+  currentStoryId = s._id || s.id;
   s.reads++;
 
   if (s.coverPhoto) {
@@ -459,7 +459,7 @@ function shareStory() {
 }
 
 function getStoryShareUrl() {
-  const s = stories.find(x => x.id === currentStoryId || String(x._id) === String(currentStoryId));
+  const s = stories.find(x => String(x._id || x.id) === String(currentStoryId));
   const id = s ? (s._id || s.id) : currentStoryId;
   return `${window.location.origin}?story=${id}`;
 }
@@ -502,13 +502,8 @@ function checkSharedStory() {
   const params = new URLSearchParams(window.location.search);
   const storyId = params.get('story');
   if (!storyId) return;
-  // Try to find and open the story after stories load
-  const tryOpen = () => {
-    const s = stories.find(x => String(x._id) === storyId || String(x.id) === storyId);
-    if (s) openStory(s._id || s.id);
-  };
-  // Wait a moment for stories to load from API
-  setTimeout(tryOpen, 1500);
+  const s = stories.find(x => String(x._id) === storyId || String(x.id) === storyId);
+  if (s) openStory(s._id || s.id);
 }
 
 async function addComment() {
@@ -975,8 +970,8 @@ async function init() {
   }
   await restoreSession();
   renderHome();
-  hideAuthModal(); // always hidden on load
-  checkSharedStory(); // open story if shared link
+  hideAuthModal();
+  checkSharedStory(); // now stories are loaded, this will work
 }
 
 init();
