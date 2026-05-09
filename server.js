@@ -200,12 +200,10 @@ app.get('*', (req, res) => {
 });
 
 // ── Connect & Start ───────────────────────────────────────────────────────────
+// Start server first so Render detects the open port
+app.listen(PORT, () => console.log(`🚀 Qalat running on port ${PORT}`));
+
+// Then connect to MongoDB
 mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Qalat running on port ${PORT}`));
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection failed:', err.message));
