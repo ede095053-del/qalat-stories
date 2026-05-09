@@ -394,11 +394,16 @@ function openStory(id) {
 
 function startReading() { openChapter(0); }
 
+function findCurrentStory() {
+  return stories.find(x => String(x._id || x.id) === String(currentStoryId));
+}
+
 function openChapter(index) {
-  const s = stories.find(x => x.id === currentStoryId);
+  const s = findCurrentStory();
   if (!s) return;
   currentChapterIndex = index;
   const ch = s.chapters[index];
+  if (!ch) return;
 
   document.getElementById('chapterTitle').textContent = ch.title;
 
@@ -418,17 +423,19 @@ function prevChapter() {
   if (currentChapterIndex > 0) openChapter(currentChapterIndex - 1);
 }
 function nextChapter() {
-  const s = stories.find(x => x.id === currentStoryId);
+  const s = findCurrentStory();
   if (s && currentChapterIndex < s.chapters.length - 1) openChapter(currentChapterIndex + 1);
 }
 
 // ===== LIKE =====
 async function likeStory() {
   if (!currentUser) { showAuthModal(); return; }
-  const s = stories.find(x => x.id === currentStoryId);
+  const s = findCurrentStory();
   if (!s) return;
-  if (typeof s.id === 'number' && s.id > 4) {
-    const data = await apiFetch('/api/stories/' + s.id + '/like', { method: 'POST' });
+  const storyId = s._id || s.id;
+  const isSample = typeof s.id === 'number' && s.id <= 4;
+  if (!isSample) {
+    const data = await apiFetch('/api/stories/' + storyId + '/like', { method: 'POST' });
     if (data.alreadyLiked) { showToast('You already liked this story!'); return; }
     if (data.likes !== undefined) s.likes = data.likes;
   } else {
@@ -465,7 +472,7 @@ function getStoryShareUrl() {
 }
 
 function shareVia(platform) {
-  const s = stories.find(x => x.id === currentStoryId || String(x._id) === String(currentStoryId));
+  const s = findCurrentStory();
   const url = getStoryShareUrl();
   const text = s ? `📖 Read "${s.title}" on ቃላት Qalat — Ethiopian Stories` : '📖 Check out this story on ቃላት Qalat';
 
@@ -511,7 +518,7 @@ async function addComment() {
   const name = document.getElementById('commentName').value.trim() || currentUser.username;
   const text = document.getElementById('commentText').value.trim();
   if (!text) { showToast('Please write a comment.'); return; }
-  const s = stories.find(x => x.id === currentStoryId);
+  const s = findCurrentStory();
   if (!s) return;
 
   if (typeof s.id === 'number' && s.id > 4) {
@@ -773,7 +780,7 @@ async function saveNewChapter() {
   if (!title) { showToast('Please enter a chapter title.'); return; }
   if (!content) { showToast('Please write some content.'); return; }
 
-  const s = stories.find(x => x.id === currentStoryId);
+  const s = findCurrentStory();
   if (!s) return;
 
   const chapter = { title, content, images: [...newChapterImageDatas] };
